@@ -1,0 +1,84 @@
+﻿<Window x:Class="ShopClient.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+        xmlns:local="clr-namespace:ShopClient"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="300" Width="920" MinWidth="920">
+
+    <Window.Resources>
+        <Style x:Name="MaskedTextBoxStyle" TargetType="{x:Type xctk:WatermarkTextBox}">
+            <Style.Triggers>
+                <Trigger Property="Validation.HasError" Value="True">
+                    <Setter Property="ToolTip"
+                                        Value="{Binding RelativeSource={x:Static RelativeSource.Self},
+                                        Path=(Validation.Errors)[0].ErrorContent}"></Setter>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+    
+    <Grid x:Name="ShopDataGrid">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="35"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+
+        <Grid.CommandBindings>
+            <CommandBinding Command="New" CanExecute="Send_CanExecute" Executed="Send_Executed" />
+        </Grid.CommandBindings>
+
+        <DockPanel DockPanel.Dock="Top" Grid.Row="0"
+                   HorizontalAlignment="Stretch">
+            <xctk:WatermarkTextBox Watermark="Имя магазина"
+                                   Width="100"
+                                   Margin="5" Focusable="True"
+                                   Validation.Error="Validation_Error">
+                <xctk:WatermarkTextBox.Text>
+                    <Binding Path="Name" UpdateSourceTrigger="LostFocus"
+                             ValidatesOnDataErrors="True" NotifyOnValidationError="True"/>
+                </xctk:WatermarkTextBox.Text>
+            </xctk:WatermarkTextBox>
+
+            <xctk:WatermarkTextBox Watermark="Адрес"
+                                   Width="250"
+                                   Margin="5"
+                                   Validation.Error="Validation_Error">
+                <xctk:WatermarkTextBox.Text>
+                    <Binding Path="Address" UpdateSourceTrigger="LostFocus"
+                             ValidatesOnDataErrors="True" NotifyOnValidationError="True"/>
+                </xctk:WatermarkTextBox.Text>
+            </xctk:WatermarkTextBox>
+
+            <xctk:MaskedTextBox x:Name="PhoneNumber"
+                                Mask="0(000)000-00-00"
+                                FontSize="14"
+                                TextAlignment="Center"
+                                Width="120"
+                                Margin="5"
+                                Validation.Error="Validation_Error">
+                <xctk:MaskedTextBox.Text>
+                    <Binding Path="PhoneNumber" UpdateSourceTrigger="LostFocus"
+                             ValidatesOnDataErrors="True" NotifyOnValidationError="True"/>
+                </xctk:MaskedTextBox.Text>
+            </xctk:MaskedTextBox>
+
+            <xctk:WatermarkTextBox Watermark="Email"
+                                   Width="250"
+                                   Margin="5"
+                                   Validation.Error="Validation_Error">
+                <xctk:WatermarkTextBox.Text>
+                    <Binding Path="Email" UpdateSourceTrigger="LostFocus"
+                             ValidatesOnDataErrors="True" NotifyOnValidationError="True"/>
+                </xctk:WatermarkTextBox.Text>
+            </xctk:WatermarkTextBox>
+
+            <Button x:Name="SendShopData" Content="Отправить данные"
+                    Width="120"
+                    Margin="5"
+                    Command="New"/>
+        </DockPanel>
+    </Grid>
+</Window>
