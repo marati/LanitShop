@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace ShopClient
 {
@@ -80,10 +81,12 @@ namespace ShopClient
         ShopModel _shop = new ShopModel();
         int _errorsCount = 0;
 
+        //TODO: config
         ServerInteraction _interaction = new ServerInteraction("localhost", 9316);
-        //такую же логику сделать и на сервере, чтобы не отправлять для магазина данные о mapping
+
         //первое сообщение - xml с mappingoм, далее сообщения с товарами
         bool _isShopMapped = false;
+        bool _isProcessing = false;
 
         public MainWindow()
         {
@@ -99,11 +102,19 @@ namespace ShopClient
 
         void ProcessingReceivedFiles()
         {
+            Thread receiveThread = new Thread(() =>
+            {
+                _isProcessing = true;
+                _interaction.ReceiveXmlMessages();
+                _isProcessing = false;
+            });
 
+            receiveThread.Start();
         } 
 
         void Send_Executed(object sender, ExecutedRoutedEventArgs e)
         {
+            //TODO: включение информации о адресе и порте
             ShopData shopData = new ShopData()
             {
                 Name = _shop.Name,
@@ -121,6 +132,9 @@ namespace ShopClient
                 sendResult = "Не удалось передать сообщение, повторите отправку";
 
             MessageBox.Show(sendResult);
+
+            if (!_isProcessing)
+                ProcessingReceivedFiles();
 
             e.Handled = true;
         }

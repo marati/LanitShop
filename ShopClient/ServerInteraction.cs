@@ -1,12 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Xml;
 using System.Xml.Serialization;
 
 namespace ShopClient
@@ -28,59 +23,87 @@ namespace ShopClient
             using (_tcpClient) { };
         }
 
+        bool ConnectToServer()
+        {
+            if (!_tcpClient.Connected)
+            {
+                try
+                {
+                    _tcpClient.Connect(_host, _port);
+                }
+                catch (SocketException e)
+                {
+                    Console.WriteLine(e.ToString());
+                }
+            }
+
+            return _tcpClient.Connected;
+        }
+
         //TODO IEnumerable , yield return
-        void ReceiveXmlMessages()
+        public void ReceiveXmlMessages(int listenerPort)
         {
             try
             {
-                using (NetworkStream clientStream = _tcpClient.GetStream())
+                TcpListener listener = new TcpListener(Helper.GetIpAddress("wireless"), listenerPort);
+                listener.Start();
+
+                while (true)
                 {
-                    while (true)
+                    Console.WriteLine("Ожидание сообщения от клиента..");
+                    TcpClient client = listener.AcceptTcpClient();
+
+                    IPEndPoint ipEndPoint = (IPEndPoint)client.Client.RemoteEndPoint;
+                    String remoteIp = ipEndPoint.Address.ToString();
+                    Console.WriteLine("Прислано новое сообщение с IP: {0}", remoteIp);
+
+                    try
                     {
+                        String receivedFileName = client.GetHashCode() + "-message.xml";
+
+                        using (NetworkStream clientStream = client.GetStream())
                         using (StreamReader reader = new StreamReader(clientStream))
+                        using (StreamWriter writer = new StreamWriter(receivedFileName))
                         {
                             String line;
 
                             while ((line = reader.ReadLine()) != null)
-                            {
-                                Console.WriteLine("Received: " + line);
-                            }
+                                writer.WriteLine(line);
+
+                            Console.WriteLine("Сообщение записано в файл {0}", receivedFileName);
                         }
 
-                        Thread.Sleep(10000);
+                        //yield return fileName
+                    }
+                    catch (InvalidOperationException e)
+                    {
+                        Console.WriteLine(e.ToString());
                     }
                 }
+
             }
-            catch (InvalidOperationException e)
+            catch (SocketException e)
             {
                 Console.WriteLine(e.ToString());
             }
-
         }
 
         public bool SendMessage(object message)
         {
             bool isSend = false;
 
-            try
+            if (ConnectToServer())
             {
-                _tcpClient.Connect(_host, _port);
                 var xmlSerializer = new XmlSerializer(message.GetType());
-                
-                using (var networkStream = _tcpClient.GetStream())
+
+                using (NetworkStream networkStream = _tcpClient.GetStream())
                     if (networkStream.CanWrite)
                         xmlSerializer.Serialize(networkStream, message);
 
                 isSend = true;
             }
-            catch (SocketException e)
-            {
-                Console.WriteLine(e.ToString());
-            }
 
             return isSend;
         }
-
-        
     }
 }
