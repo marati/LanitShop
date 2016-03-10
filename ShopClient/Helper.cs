@@ -2,11 +2,10 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Net.NetworkInformation;
-using System.Xml;
 
-namespace ShopServer
+namespace ShopClient
 {
-    static class Helper
+    class Helper
     {
         static NetworkInterfaceType GetInterfaceByString(String type)
         {
@@ -57,20 +56,6 @@ namespace ShopServer
             }
 
             return resultIp;
-        }
-
-        public static String RetriveRootNode(XmlReader reader)
-        {
-            String rootNodeName = null;
-
-            while (reader.Read())
-                if (reader.NodeType == XmlNodeType.Element)
-                {
-                    rootNodeName = reader.Name;
-                    break;
-                }
-
-            return rootNodeName;
         }
     }
 }
