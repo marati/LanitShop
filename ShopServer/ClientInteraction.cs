@@ -80,7 +80,7 @@ namespace ShopServer
         /// <param name="rootNode"></param>
         /// <param name="reader"></param>
         /// <returns>Ответ клиенту</returns>
-        void HandleCommand(String rootNode, XmlReader reader, IPEndPoint endPoint)
+        void HandleCommand(String rootNode, XmlReader reader, IPAddress clientIp)
         {
             switch (rootNode)
             {
@@ -88,14 +88,20 @@ namespace ShopServer
                     XmlSerializer serializer = new XmlSerializer(typeof(ShopData));
                     ShopData data = (ShopData)serializer.Deserialize(reader);
                     int shopId = _command.InsertShop(data);
+                    IPEndPoint endPoint = new IPEndPoint(clientIp, data.Port);
 
-                    //TODO: записывать в коллекцию данные адреса и порта из xml
-                    if (!_shopOfClient.ContainsKey(shopId))
+                    if (_shopOfClient.ContainsKey(shopId))
+                    {
+                        _shopOfClient[shopId] = endPoint;
+                    }
+                    else
+                    {
                         _shopOfClient.Add(shopId, endPoint);
 
-                    object response = _command.CreateResponse(data.Token, shopId);
-                    if (response != null)
-                        NotifyClient(shopId, endPoint, response);
+                        object response = _command.CreateResponse(data.Token, shopId);
+                        if (response != null)
+                            NotifyClient(shopId, endPoint, response);
+                    }
 
                     break;
 
@@ -104,7 +110,7 @@ namespace ShopServer
             }
         }
 
-        void ProcessRequest(String path, IPEndPoint endPoint)
+        void ProcessRequest(String path, IPAddress clientIp)
         {
             try
             {
@@ -121,7 +127,7 @@ namespace ShopServer
                     }
                     else
                     {
-                        HandleCommand(rootNode, reader, endPoint);
+                        HandleCommand(rootNode, reader, clientIp);
                     }
                 }
             }
@@ -163,7 +169,7 @@ namespace ShopServer
                             Console.WriteLine("Сообщение записано в файл {0}", receivedFileName);
                         }
 
-                        ProcessRequest(receivedFileName, ipEndPoint);
+                        ProcessRequest(receivedFileName, ipEndPoint.Address);
                     }
                     catch (InvalidOperationException e)
                     {

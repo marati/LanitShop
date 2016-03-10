@@ -15,7 +15,12 @@ namespace ShopClient
         public String Address { get; set; }
         public String PhoneNumber { get; set; }
         public String Email { get; set; }
-        public String Token { get; set; }
+
+        public int Token { get; set; }
+        /// <summary>
+        /// Listener Port на клиенте
+        /// </summary>
+        public int Port { get; set; }
     }
 
     public class ShopModel : ShopData, IDataErrorInfo
@@ -82,7 +87,7 @@ namespace ShopClient
         int _errorsCount = 0;
 
         //TODO: config
-        ServerInteraction _interaction = new ServerInteraction("localhost", 9316);
+        ServerInteraction _interaction = new ServerInteraction(9316);
 
         //первое сообщение - xml с mappingoм, далее сообщения с товарами
         bool _isShopMapped = false;
@@ -109,6 +114,7 @@ namespace ShopClient
                 _isProcessing = false;
             });
 
+            receiveThread.IsBackground = true;
             receiveThread.Start();
         } 
 
@@ -121,7 +127,8 @@ namespace ShopClient
                 Address = _shop.Address,
                 PhoneNumber = _shop.PhoneNumber,
                 Email = _shop.Email,
-                Token = _shop.GetHashCode().ToString()
+                Token = _shop.GetHashCode(),
+                Port = _interaction.GetListenerPort()
             };
 
             String sendResult;

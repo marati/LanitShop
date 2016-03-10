@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Net;
-using System.Net.Sockets;
-using System.IO;
-using System.Xml;
-using System.Xml.Serialization;
 
 namespace ShopServer
 {

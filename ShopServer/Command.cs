@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 
 namespace ShopServer
 {
-    class ShopMapping
+    public class ShopMapping
     {
-        public String Token { get; set; }
+        public int Token { get; set; }
         public int Id { get; set; }
     }
 
@@ -22,7 +22,7 @@ namespace ShopServer
             return 0;
         }
 
-        public ShopMapping CreateResponse(String token, int id)
+        public ShopMapping CreateResponse(int token, int id)
         {
             return new ShopMapping()
             {

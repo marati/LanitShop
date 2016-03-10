@@ -8,19 +8,30 @@ namespace ShopClient
 {
     class ServerInteraction
     {
-        String _host;
-        int _port;
+        IPAddress _ipAddress = Helper.GetIpAddress("wireless");
+        int _serverPort;
+
+        TcpListener _tcpListener;
         TcpClient _tcpClient = new TcpClient();
 
-        public ServerInteraction(String host, int port)
+        public ServerInteraction(int port)
         {
-            _host = host;
-            _port = port;
+            _tcpListener = new TcpListener(_ipAddress, 0);
+            _tcpListener.Start();
+            _serverPort = port;
         }
 
         ~ServerInteraction()
         {
             using (_tcpClient) { };
+
+            if (_tcpListener != null)
+                _tcpListener.Stop();
+        }
+
+        public int GetListenerPort()
+        {
+            return ((IPEndPoint)_tcpListener.LocalEndpoint).Port;
         }
 
         bool ConnectToServer()
@@ -29,7 +40,7 @@ namespace ShopClient
             {
                 try
                 {
-                    _tcpClient.Connect(_host, _port);
+                    _tcpClient.Connect(_ipAddress, _serverPort);
                 }
                 catch (SocketException e)
                 {
@@ -40,18 +51,33 @@ namespace ShopClient
             return _tcpClient.Connected;
         }
 
+        public bool SendMessage(object message)
+        {
+            bool isSend = false;
+
+            if (ConnectToServer())
+            {
+                var xmlSerializer = new XmlSerializer(message.GetType());
+
+                using (NetworkStream networkStream = _tcpClient.GetStream())
+                    if (networkStream.CanWrite)
+                        xmlSerializer.Serialize(networkStream, message);
+
+                isSend = true;
+            }
+
+            return isSend;
+        }
+
         //TODO IEnumerable , yield return
-        public void ReceiveXmlMessages(int listenerPort)
+        public void ReceiveXmlMessages()
         {
             try
             {
-                TcpListener listener = new TcpListener(Helper.GetIpAddress("wireless"), listenerPort);
-                listener.Start();
-
                 while (true)
                 {
                     Console.WriteLine("Ожидание сообщения от клиента..");
-                    TcpClient client = listener.AcceptTcpClient();
+                    TcpClient client = _tcpListener.AcceptTcpClient();
 
                     IPEndPoint ipEndPoint = (IPEndPoint)client.Client.RemoteEndPoint;
                     String remoteIp = ipEndPoint.Address.ToString();
@@ -86,24 +112,6 @@ namespace ShopClient
             {
                 Console.WriteLine(e.ToString());
             }
-        }
-
-        public bool SendMessage(object message)
-        {
-            bool isSend = false;
-
-            if (ConnectToServer())
-            {
-                var xmlSerializer = new XmlSerializer(message.GetType());
-
-                using (NetworkStream networkStream = _tcpClient.GetStream())
-                    if (networkStream.CanWrite)
-                        xmlSerializer.Serialize(networkStream, message);
-
-                isSend = true;
-            }
-
-            return isSend;
         }
     }
 }
