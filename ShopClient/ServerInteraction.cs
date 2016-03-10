@@ -25,8 +25,13 @@ namespace ShopClient
         {
             using (_tcpClient) { };
 
-            if (_tcpListener != null)
+            try
+            {
                 _tcpListener.Stop();
+            }
+            catch (SocketException)
+            {
+            }
         }
 
         public int GetListenerPort()
@@ -76,7 +81,7 @@ namespace ShopClient
             {
                 while (true)
                 {
-                    Console.WriteLine("Ожидание сообщения от клиента..");
+                    Console.WriteLine("Ожидание сообщения от сервера..");
                     TcpClient client = _tcpListener.AcceptTcpClient();
 
                     IPEndPoint ipEndPoint = (IPEndPoint)client.Client.RemoteEndPoint;

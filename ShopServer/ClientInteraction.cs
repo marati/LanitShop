@@ -10,8 +10,25 @@ namespace ShopServer
 {
     class ClientInteraction
     {
+        TcpListener _tcpListener;
         Command _command = new Command();
         Dictionary<int, IPEndPoint> _shopOfClient = new Dictionary<int, IPEndPoint>();
+
+        public ClientInteraction(int port)
+        {
+            _tcpListener = new TcpListener(Helper.GetIpAddress("wireless"), port);
+        }
+        
+        ~ClientInteraction()
+        {
+            try
+            {
+                _tcpListener.Stop();
+            }
+            catch (SocketException)
+            {
+            }
+        }
 
         static bool SendResponse(object message, NetworkStream clientStream)
         {
@@ -137,17 +154,16 @@ namespace ShopServer
             }
         }
 
-        public void ReceiveMessages(int port)
+        public void ReceiveMessages()
         {
             try
             {
-                TcpListener listener = new TcpListener(Helper.GetIpAddress("wireless"), port);
-                listener.Start();
+                _tcpListener.Start();
 
                 while (true)
                 {
                     Console.WriteLine("Ожидание сообщения от клиента..");
-                    TcpClient client = listener.AcceptTcpClient();
+                    TcpClient client = _tcpListener.AcceptTcpClient();
 
                     IPEndPoint ipEndPoint = (IPEndPoint)client.Client.RemoteEndPoint;
                     String remoteIp = ipEndPoint.Address.ToString();
