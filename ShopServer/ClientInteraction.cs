@@ -4,20 +4,19 @@ using System.Net.Sockets;
 using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
+using System.Collections.Generic;
 
 namespace ShopServer
 {
     class ClientInteraction
     {
         Command _command = new Command();
+        Dictionary<int, IPEndPoint> _shopOfClient = new Dictionary<int, IPEndPoint>();
 
-        void SaveClientData(NetworkStream clientStream)
+        static bool SendResponse(object message, NetworkStream clientStream)
         {
-            
-        }
+            bool isSend = false;
 
-        static void SendResponse(object message, NetworkStream clientStream)
-        {
             try
             {
                 var xmlSerializer = new XmlSerializer(message.GetType());
@@ -26,12 +25,53 @@ namespace ShopServer
                     if (clientStream.CanWrite)
                         xmlSerializer.Serialize(clientStream, message);
 
-                Console.WriteLine("Отправлен ответ на запрос клиента.");
+                isSend = true;
             }
             catch (SocketException e)
             {
                 Console.WriteLine(e.ToString());
             }
+
+            return isSend;
+        }
+
+        bool NotifyClient(int shopId, IPEndPoint endPoint, object response)
+        {
+            bool isNotified = false;
+
+            try
+            {
+                TcpClient client = new TcpClient();
+                client.Connect(endPoint);
+
+                if (SendResponse(response, client.GetStream()))
+                {
+                    isNotified = true;
+                    Console.WriteLine(
+                        "Клиенту {0}:{1} (shop id: {2}) успешно отправлено оповещение.",
+                        endPoint.Address.ToString(), endPoint.Port, shopId
+                    );
+                }
+            }
+            catch (SocketException)
+            {
+                Console.WriteLine("Не удалось подключиться к клиенту с Ip {0}", endPoint.Address.ToString());
+            }
+
+            return isNotified;
+        }
+
+        void NotifyClients(object response)
+        {
+            List<int> inaccessibleClients = new List<int>();
+
+            foreach (KeyValuePair<int, IPEndPoint> shopIp in _shopOfClient)
+                if (NotifyClient(shopIp.Key, shopIp.Value, response))
+                    inaccessibleClients.Add(shopIp.Key);
+
+            foreach (int shopId in inaccessibleClients)
+                if (_shopOfClient.Remove(shopId))
+                    Console.WriteLine("Магазин с Id {0} удалён из списка отправки оповещений.", shopId);
         }
 
         /// <summary>
@@ -40,10 +80,8 @@ namespace ShopServer
         /// <param name="rootNode"></param>
         /// <param name="reader"></param>
         /// <returns>Ответ клиенту</returns>
-        object HandleCommand(String rootNode, XmlReader reader)
+        void HandleCommand(String rootNode, XmlReader reader, IPEndPoint endPoint)
         {
-            object response = null;
-
             switch (rootNode)
             {
                 case "ShopData":
@@ -51,34 +89,45 @@ namespace ShopServer
                     ShopData data = (ShopData)serializer.Deserialize(reader);
                     int shopId = _command.InsertShop(data);
 
-                    response = _command.CreateResponse(data.Token, shopId);
+                    //TODO: записывать в коллекцию данные адреса и порта из xml
+                    if (!_shopOfClient.ContainsKey(shopId))
+                        _shopOfClient.Add(shopId, endPoint);
+
+                    object response = _command.CreateResponse(data.Token, shopId);
+                    if (response != null)
+                        NotifyClient(shopId, endPoint, response);
+
                     break;
 
                 case "GoodData":
                     break;
             }
-
-            return response;
         }
 
-        void ProcessFile(String path, NetworkStream clientStream)
+        void ProcessRequest(String path, IPEndPoint endPoint)
         {
-            using (XmlReader reader = XmlReader.Create(path))
+            try
             {
-                String rootNode = Helper.RetriveRootNode(reader);
+                using (XmlReader reader = XmlReader.Create(path))
+                {
+                    String rootNode = Helper.RetriveRootNode(reader);
 
-                if (rootNode == null)
-                {
-                    Console.WriteLine(
-                        "В принятом файле {0} не обнаружено ни одного элемента, обработка команды производится не будет.",
-                        path
-                    );
+                    if (rootNode == null)
+                    {
+                        Console.WriteLine(
+                            "В принятом файле {0} не обнаружено ни одного элемента, обработка команды производится не будет.",
+                            path
+                        );
+                    }
+                    else
+                    {
+                        HandleCommand(rootNode, reader, endPoint);
+                    }
                 }
-                else
-                {
-                    object response = HandleCommand(rootNode, reader);
-                    SendResponse(response, clientStream);
-                }
+            }
+            catch (FileNotFoundException)
+            {
+                Console.WriteLine("Принятый файл не обнаружен по пути {0}", path);
             }
         }
 
@@ -86,23 +135,23 @@ namespace ShopServer
         {
             try
             {
-                TcpListener listener = new TcpListener(IPAddress.Parse("127.0.0.1"), port);
+                TcpListener listener = new TcpListener(Helper.GetIpAddress("wireless"), port);
                 listener.Start();
 
                 while (true)
                 {
                     Console.WriteLine("Ожидание сообщения от клиента..");
                     TcpClient client = listener.AcceptTcpClient();
-                    String remoteIp = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
+
+                    IPEndPoint ipEndPoint = (IPEndPoint)client.Client.RemoteEndPoint;
+                    String remoteIp = ipEndPoint.Address.ToString();
                     Console.WriteLine("Прислано новое сообщение с IP: {0}", remoteIp);
 
                     try
                     {
                         String receivedFileName = client.GetHashCode() + "-message.xml";
 
-                        /*using*/
-                        //TODO: контроль за освобождением этого ресурса
-                        NetworkStream clientStream = client.GetStream();
+                        using (NetworkStream clientStream = client.GetStream())
                         using (StreamReader reader = new StreamReader(clientStream))
                         using (StreamWriter writer = new StreamWriter(receivedFileName))
                         {
@@ -114,7 +163,7 @@ namespace ShopServer
                             Console.WriteLine("Сообщение записано в файл {0}", receivedFileName);
                         }
 
-                        ProcessFile(receivedFileName, clientStream);
+                        ProcessRequest(receivedFileName, ipEndPoint);
                     }
                     catch (InvalidOperationException e)
                     {
