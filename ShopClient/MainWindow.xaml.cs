@@ -7,13 +7,18 @@ using System.Text.RegularExpressions;
 
 namespace ShopClient
 {
-    public class ShopData : IDataErrorInfo
+    [Serializable]
+    public class ShopData
     {
         public String Name { get; set; }
         public String Address { get; set; }
         public String PhoneNumber { get; set; }
         public String Email { get; set; }
+        public String Token { get; set; }
+    }
 
+    public class ShopModel : ShopData, IDataErrorInfo
+    {
         public String Error
         {
             get { return null; }
@@ -72,8 +77,13 @@ namespace ShopClient
     /// </summary>
     public partial class MainWindow : Window
     {
-        ShopData _shop = new ShopData();
+        ShopModel _shop = new ShopModel();
         int _errorsCount = 0;
+
+        ServerInteraction _interaction = new ServerInteraction("localhost", 9316);
+        //такую же логику сделать и на сервере, чтобы не отправлять для магазина данные о mapping
+        //первое сообщение - xml с mappingoм, далее сообщения с товарами
+        bool _isShopMapped = false;
 
         public MainWindow()
         {
@@ -87,9 +97,30 @@ namespace ShopClient
             e.Handled = true;
         }
 
+        void ProcessingReceivedFiles()
+        {
+
+        } 
+
         void Send_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            //отправка
+            ShopData shopData = new ShopData()
+            {
+                Name = _shop.Name,
+                Address = _shop.Address,
+                PhoneNumber = _shop.PhoneNumber,
+                Email = _shop.Email,
+                Token = _shop.GetHashCode().ToString()
+            };
+
+            String sendResult;
+
+            if (_interaction.SendMessage(shopData))
+                sendResult = "Сообщение успешно передано";
+            else
+                sendResult = "Не удалось передать сообщение, повторите отправку";
+
+            MessageBox.Show(sendResult);
 
             e.Handled = true;
         }
