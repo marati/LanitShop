@@ -5,8 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         xmlns:local="clr-namespace:ShopClient"
+        xmlns:model="clr-namespace:ShopClient.Model"
         mc:Ignorable="d"
-        Title="MainWindow" Height="300" Width="920" MinWidth="920">
+        Title="MainWindow" Height="300" Width="915" MinWidth="915">
 
     <Window.Resources>
         <Style x:Name="MaskedTextBoxStyle" TargetType="{x:Type xctk:WatermarkTextBox}">
@@ -18,20 +19,17 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
+
+        <model:GoodConverter x:Key="GoodConverter"/>
+        <model:GoodModel x:Key="GoodModel" x:Shared="false"/>
     </Window.Resources>
-    
-    <Grid x:Name="ShopDataGrid">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="35"/>
-            <RowDefinition/>
-        </Grid.RowDefinitions>
 
-        <Grid.CommandBindings>
+    <DockPanel x:Name="GoodPanel">
+        <DockPanel.CommandBindings>
             <CommandBinding Command="New" CanExecute="Send_CanExecute" Executed="Send_Executed" />
-        </Grid.CommandBindings>
+        </DockPanel.CommandBindings>
 
-        <DockPanel DockPanel.Dock="Top" Grid.Row="0"
-                   HorizontalAlignment="Stretch">
+        <DockPanel x:Name="ShopPanel" DockPanel.Dock="Top" Grid.Row="0" HorizontalAlignment="Stretch">
             <xctk:WatermarkTextBox Watermark="Имя магазина"
                                    Width="100"
                                    Margin="5" Focusable="True"
@@ -80,5 +78,50 @@
                     Margin="5"
                     Command="New"/>
         </DockPanel>
-    </Grid>
+
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
+            <xctk:WatermarkTextBox Watermark="Имя товара" x:Name="GoodName"
+                                   Width="150"
+                                   Margin="5"/>
+
+            <xctk:WatermarkTextBox Watermark="Количество" x:Name="Quantity"
+                                   Width="80"
+                                   Margin="5"
+                                   PreviewTextInput="QuantityValidation"/>
+
+            <Button Content="Добавить позицию"
+                        Width="120"
+                        Margin="5"
+                        DataContext="{StaticResource GoodModel}"
+                        Command="{Binding AddGood, Source={StaticResource GoodModel}}">
+                <Button.CommandParameter>
+                    <MultiBinding Converter="{StaticResource GoodConverter}">
+                        <Binding Path="Text" ElementName="GoodName"/>
+                        <Binding Path="Text" ElementName="Quantity"/>
+                    </MultiBinding>
+                </Button.CommandParameter>
+            </Button>
+        </StackPanel>
+
+        <ListView x:Name="GoodsList"
+                  DataContext="{StaticResource GoodModel}" ItemsSource="{Binding Goods}"
+                  HorizontalAlignment="Stretch" Margin="5">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn DisplayMemberBinding="{Binding Name}"
+                                Header="Товар" Width="auto"/>
+                    <GridViewColumn DisplayMemberBinding="{Binding Quantity}"
+                                Header="Количество" Width="auto"/>
+                </GridView>
+            </ListView.View>
+            <ListView.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Удалить строку" Command="{Binding AddGood}"
+                              CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItem}">
+                        
+                    </MenuItem>
+                </ContextMenu>
+            </ListView.ContextMenu>
+        </ListView>
+    </DockPanel>
 </Window>
