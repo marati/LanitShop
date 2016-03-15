@@ -2,7 +2,6 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.ComponentModel;
 using System.Text.RegularExpressions;
 using System.Collections.Specialized;
 using System.Threading;
@@ -14,10 +13,15 @@ namespace ShopClient
     /// </summary>
     public partial class MainWindow : Window
     {
-        ShopModel _shop = new ShopModel();
-        int _errorsCount = 0;
+        public class Models
+        {
+            public Model.Shop Shop { get; set; }
+            public Model.Good Good { get; set; }
+        }
 
-        Model.GoodModel _goodModel;
+        Models _models;
+
+        int _errorsCount = 0;
 
         //TODO: config
         ServerInteraction _interaction = new ServerInteraction(9316);
@@ -29,11 +33,15 @@ namespace ShopClient
         {
             InitializeComponent();
 
-            ShopPanel.DataContext = _shop;
+            _models = new Models()
+            {
+                Shop = new Model.Shop(),
+                Good = new Model.Good()
+            };
 
-            _goodModel = new Model.GoodModel();
-            GoodsList.DataContext = _goodModel;
-            _goodModel.Goods.CollectionChanged += Goods_CollectionChanged;
+            DataContext = _models;
+
+            _models.Good.Goods.CollectionChanged += Goods_CollectionChanged;
 
             ProcessingReceivedFiles();
         }
@@ -68,14 +76,13 @@ namespace ShopClient
 
         void Send_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            //TODO: включение информации о адресе и порте
-            ShopData shopData = new ShopData()
+            var shopData = new Model.ShopEntity
             {
-                Name = _shop.Name,
-                Address = _shop.Address,
-                PhoneNumber = _shop.PhoneNumber,
-                Email = _shop.Email,
-                Token = _shop.GetHashCode(),
+                Name = _models.Shop.Name,
+                Address = _models.Shop.Address,
+                PhoneNumber = _models.Shop.PhoneNumber,
+                Email = _models.Shop.Email,
+                Token = _models.Shop.GetHashCode(),
                 Port = _interaction.GetListenerPort()
             };
 

@@ -19,12 +19,12 @@ namespace ShopClient.Model
             {
             }
 
-            return new Good(goodName, quantity);
+            return new GoodEntity(goodName, quantity);
         }
 
         public object[] ConvertBack(object value, Type[] types, object o, CultureInfo ci)
         {
-            Good good = (Good)value;
+            GoodEntity good = (GoodEntity)value;
             return new object[] { good.Name, good.Quantity };
         }
     }

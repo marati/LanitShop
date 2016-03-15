@@ -1,28 +1,36 @@
 ﻿using System;
+using System.Windows.Input;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace ShopClient.Model
 {
-    public class Good : INotifyPropertyChanged
+    public class Good
     {
-        /// <summary>
-        /// Mapping на базу данных
-        /// </summary>
-        public int Id { get; set; }
-        public String Name { get; set; }
-        public int Quantity { get; set; }
+        ObservableCollection<GoodEntity> _goods = new ObservableCollection<GoodEntity>();
 
-        public Good(String name, int quantity)
+        public ObservableCollection<GoodEntity> Goods
         {
-            Name = name;
-            Quantity = quantity;
+            get { return _goods; }
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        private void RaisePropertyChanged(string propertyName)
+        private ICommand _addGood;
+        public ICommand AddGood
         {
-            PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            get
+            {
+                return _addGood ?? (_addGood = new GoodCommand<object>(Add));
+            }
+        }
+
+        public void Add(object parameter)
+        {
+            GoodEntity good = parameter as GoodEntity;
+
+            if (good != null)
+                if (!Goods.Contains(good))
+                    Goods.Add(good);
         }
     }
 }

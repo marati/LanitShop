@@ -81,11 +81,12 @@
     </ApplicationDefinition>
     <Compile Include="Model\GoodCommand.cs" />
     <Compile Include="Model\GoodConverter.cs" />
-    <Compile Include="Model\GoodModel.cs" />
     <Compile Include="Model\Good.cs" />
+    <Compile Include="Model\GoodEntity.cs" />
     <Compile Include="Helper.cs" />
+    <Compile Include="Model\ShopEntity.cs" />
     <Compile Include="ServerInteraction.cs" />
-    <Compile Include="ShopModel.cs" />
+    <Compile Include="Model\Shop.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

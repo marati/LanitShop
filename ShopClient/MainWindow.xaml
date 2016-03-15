@@ -14,14 +14,13 @@
             <Style.Triggers>
                 <Trigger Property="Validation.HasError" Value="True">
                     <Setter Property="ToolTip"
-                                        Value="{Binding RelativeSource={x:Static RelativeSource.Self},
-                                        Path=(Validation.Errors)[0].ErrorContent}"></Setter>
+                            Value="{Binding RelativeSource={x:Static RelativeSource.Self},
+                            Path=(Validation.Errors)[0].ErrorContent}"></Setter>
                 </Trigger>
             </Style.Triggers>
         </Style>
 
         <model:GoodConverter x:Key="GoodConverter"/>
-        <model:GoodModel x:Key="GoodModel" x:Shared="false"/>
     </Window.Resources>
 
     <DockPanel x:Name="GoodPanel">
@@ -35,7 +34,7 @@
                                    Margin="5" Focusable="True"
                                    Validation.Error="Validation_Error">
                 <xctk:WatermarkTextBox.Text>
-                    <Binding Path="Name" UpdateSourceTrigger="LostFocus"
+                    <Binding Path="Shop.Name" UpdateSourceTrigger="LostFocus"
                              ValidatesOnDataErrors="True" NotifyOnValidationError="True"/>
                 </xctk:WatermarkTextBox.Text>
             </xctk:WatermarkTextBox>
@@ -45,7 +44,7 @@
                                    Margin="5"
                                    Validation.Error="Validation_Error">
                 <xctk:WatermarkTextBox.Text>
-                    <Binding Path="Address" UpdateSourceTrigger="LostFocus"
+                    <Binding Path="Shop.Address" UpdateSourceTrigger="LostFocus"
                              ValidatesOnDataErrors="True" NotifyOnValidationError="True"/>
                 </xctk:WatermarkTextBox.Text>
             </xctk:WatermarkTextBox>
@@ -58,7 +57,7 @@
                                 Margin="5"
                                 Validation.Error="Validation_Error">
                 <xctk:MaskedTextBox.Text>
-                    <Binding Path="PhoneNumber" UpdateSourceTrigger="LostFocus"
+                    <Binding Path="Shop.PhoneNumber" UpdateSourceTrigger="LostFocus"
                              ValidatesOnDataErrors="True" NotifyOnValidationError="True"/>
                 </xctk:MaskedTextBox.Text>
             </xctk:MaskedTextBox>
@@ -68,7 +67,7 @@
                                    Margin="5"
                                    Validation.Error="Validation_Error">
                 <xctk:WatermarkTextBox.Text>
-                    <Binding Path="Email" UpdateSourceTrigger="LostFocus"
+                    <Binding Path="Shop.Email" UpdateSourceTrigger="LostFocus"
                              ValidatesOnDataErrors="True" NotifyOnValidationError="True"/>
                 </xctk:WatermarkTextBox.Text>
             </xctk:WatermarkTextBox>
@@ -92,8 +91,7 @@
             <Button Content="Добавить позицию"
                         Width="120"
                         Margin="5"
-                        DataContext="{StaticResource GoodModel}"
-                        Command="{Binding AddGood, Source={StaticResource GoodModel}}">
+                        Command="{Binding Good.AddGood}">
                 <Button.CommandParameter>
                     <MultiBinding Converter="{StaticResource GoodConverter}">
                         <Binding Path="Text" ElementName="GoodName"/>
@@ -104,14 +102,26 @@
         </StackPanel>
 
         <ListView x:Name="GoodsList"
-                  DataContext="{StaticResource GoodModel}" ItemsSource="{Binding Goods}"
+                  ItemsSource="{Binding Good.Goods}"
+                  IsSynchronizedWithCurrentItem="True"
                   HorizontalAlignment="Stretch" Margin="5">
             <ListView.View>
                 <GridView>
-                    <GridViewColumn DisplayMemberBinding="{Binding Name}"
-                                Header="Товар" Width="auto"/>
-                    <GridViewColumn DisplayMemberBinding="{Binding Quantity}"
-                                Header="Количество" Width="auto"/>
+                    <GridViewColumn Header="Товар">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBox Text="{Binding Name}" BorderThickness="0"/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    
+                    <GridViewColumn Header="Количество">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBox Text="{Binding Quantity}" BorderThickness="0"/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
                 </GridView>
             </ListView.View>
             <ListView.ContextMenu>
