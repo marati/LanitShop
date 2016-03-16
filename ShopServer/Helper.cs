@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Net.NetworkInformation;
 using System.Xml;
+using System.Xml.Serialization;
 
 namespace ShopServer
 {
@@ -59,6 +60,9 @@ namespace ShopServer
             return resultIp;
         }
 
+
+        #region work with xml
+
         public static String RetriveRootNode(XmlReader reader)
         {
             String rootNodeName = null;
@@ -72,5 +76,25 @@ namespace ShopServer
 
             return rootNodeName;
         }
+
+        public static object DeserializeXml(Type type, XmlReader reader)
+        {
+            object result = null;
+            XmlSerializer serializer = new XmlSerializer(type);
+
+            try
+            {
+                result = serializer.Deserialize(reader);
+                Console.WriteLine("Присланное сообщение с типом {0} успешно десериализовано.", type.ToString());
+            }
+            catch (InvalidOperationException)
+            {
+                Console.WriteLine("Не удалось десериализовать присланное сообщение с типом {0}", type.ToString());
+            }
+
+            return result;
+        }
+
+        #endregion
     }
 }

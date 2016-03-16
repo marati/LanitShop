@@ -2,6 +2,8 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Net.NetworkInformation;
+using System.Xml;
+using System.Xml.Serialization;
 
 namespace ShopClient
 {
@@ -56,6 +58,42 @@ namespace ShopClient
             }
 
             return resultIp;
+        }
+
+        public static object DeserializeXml(Type type, String filePath)
+        {
+            object result = null;
+            XmlReader reader = null;
+
+            try
+            {
+                reader = XmlReader.Create(filePath);
+            }
+            catch (System.IO.FileNotFoundException)
+            {
+                Console.WriteLine("Принятый файл не обнаружен по пути {0}", filePath);
+            }
+            catch (System.Security.SecurityException e)
+            {
+                Console.WriteLine("Не удалось обработать принятый файл. Причина:\n{0}", e.ToString());
+            }
+
+            if (reader != null)
+            {
+                XmlSerializer serializer = new XmlSerializer(type);
+
+                try
+                {
+                    result = serializer.Deserialize(reader);
+                    Console.WriteLine("Присланное сообщение с типом {0} успешно десериализовано.", type.ToString());
+                }
+                catch (InvalidOperationException)
+                {
+                    Console.WriteLine("Не удалось десериализовать присланное сообщение с типом {0}", type.ToString());
+                }
+            }
+
+            return result;
         }
     }
 }

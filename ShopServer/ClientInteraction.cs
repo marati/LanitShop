@@ -91,6 +91,26 @@ namespace ShopServer
                     Console.WriteLine("Магазин с Id {0} удалён из списка отправки оповещений.", shopId);
         }
 
+        void ProcessShopEntity(XmlReader reader, IPAddress clientIp)
+        {
+            ShopEntity data = (ShopEntity)Helper.DeserializeXml(typeof(ShopEntity), reader);
+            int shopId = _command.InsertShop(data);
+            IPEndPoint endPoint = new IPEndPoint(clientIp, data.Port);
+
+            if (_shopOfClient.ContainsKey(shopId))
+            {
+                _shopOfClient[shopId] = endPoint;
+            }
+            else
+            {
+                _shopOfClient.Add(shopId, endPoint);
+
+                object response = _command.CreateResponse(data.Token, shopId);
+                if (response != null)
+                    NotifyClient(shopId, endPoint, response);
+            }
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -101,25 +121,8 @@ namespace ShopServer
         {
             switch (rootNode)
             {
-                case "ShopData":
-                    XmlSerializer serializer = new XmlSerializer(typeof(ShopData));
-                    ShopData data = (ShopData)serializer.Deserialize(reader);
-                    int shopId = _command.InsertShop(data);
-                    IPEndPoint endPoint = new IPEndPoint(clientIp, data.Port);
-
-                    if (_shopOfClient.ContainsKey(shopId))
-                    {
-                        _shopOfClient[shopId] = endPoint;
-                    }
-                    else
-                    {
-                        _shopOfClient.Add(shopId, endPoint);
-
-                        object response = _command.CreateResponse(data.Token, shopId);
-                        if (response != null)
-                            NotifyClient(shopId, endPoint, response);
-                    }
-
+                case "ShopEntity":
+                    ProcessShopEntity(reader, clientIp);
                     break;
 
                 case "GoodData":
@@ -151,6 +154,10 @@ namespace ShopServer
             catch (FileNotFoundException)
             {
                 Console.WriteLine("Принятый файл не обнаружен по пути {0}", path);
+            }
+            catch (System.Security.SecurityException e)
+            {
+                Console.WriteLine("Не удалось обработать принятый файл. Причина:\n{0}", e.ToString());
             }
         }
 
