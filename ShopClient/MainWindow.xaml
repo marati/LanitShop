@@ -23,12 +23,12 @@
         <model:GoodConverter x:Key="GoodConverter"/>
     </Window.Resources>
 
-    <DockPanel x:Name="GoodPanel">
+    <DockPanel>
         <DockPanel.CommandBindings>
             <CommandBinding Command="New" CanExecute="Send_CanExecute" Executed="Send_Executed" />
         </DockPanel.CommandBindings>
 
-        <DockPanel x:Name="ShopPanel" DockPanel.Dock="Top" Grid.Row="0" HorizontalAlignment="Stretch">
+        <DockPanel DockPanel.Dock="Top" Grid.Row="0" HorizontalAlignment="Stretch">
             <xctk:WatermarkTextBox Watermark="Имя магазина"
                                    Width="100"
                                    Margin="5" Focusable="True"
@@ -49,8 +49,7 @@
                 </xctk:WatermarkTextBox.Text>
             </xctk:WatermarkTextBox>
 
-            <xctk:MaskedTextBox x:Name="PhoneNumber"
-                                Mask="0(000)000-00-00"
+            <xctk:MaskedTextBox Mask="0(000)000-00-00"
                                 FontSize="14"
                                 TextAlignment="Center"
                                 Width="120"
@@ -72,7 +71,7 @@
                 </xctk:WatermarkTextBox.Text>
             </xctk:WatermarkTextBox>
 
-            <Button x:Name="SendShopData" Content="Отправить данные"
+            <Button Content="Отправить данные"
                     Width="120"
                     Margin="5"
                     Command="New"/>
@@ -88,10 +87,11 @@
                                    Margin="5"
                                    PreviewTextInput="QuantityValidation"/>
 
-            <Button Content="Добавить позицию"
-                        Width="120"
-                        Margin="5"
-                        Command="{Binding Good.AddGood}">
+            <Button x:Name="InsertGood" Content="Добавить позицию"
+                    Width="120"
+                    Margin="5"
+                    Command="{Binding Good.AddGood}"
+                    IsEnabled="False">
                 <Button.CommandParameter>
                     <MultiBinding Converter="{StaticResource GoodConverter}">
                         <Binding Path="Text" ElementName="GoodName"/>
