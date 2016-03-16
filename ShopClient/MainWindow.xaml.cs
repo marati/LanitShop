@@ -6,6 +6,9 @@ using System.Text.RegularExpressions;
 using System.Collections.Specialized;
 using System.Threading;
 
+using ShopClient.Server;
+using System.Windows.Threading;
+
 namespace ShopClient
 {
     /// <summary>
@@ -20,14 +23,9 @@ namespace ShopClient
         }
 
         Models _models;
-
         int _errorsCount = 0;
 
-        //TODO: config
-        ServerInteraction _interaction = new ServerInteraction(9316);
-
-        //первое сообщение - xml с mappingoм, далее сообщения с товарами
-        bool _isShopMapped = false;
+        ServerInteraction _interaction = new ServerInteraction(Properties.Settings.Default.serverPort);
 
         public MainWindow()
         {
@@ -40,7 +38,6 @@ namespace ShopClient
             };
 
             DataContext = _models;
-
             _models.Good.Goods.CollectionChanged += Goods_CollectionChanged;
 
             ProcessingReceivedFiles();
@@ -59,7 +56,27 @@ namespace ShopClient
             Thread receiveThread = new Thread(() =>
             {
                 //TODO: отлавливать выход из ф-ции и перезапускать её
-                _interaction.ReceiveXmlMessages();
+                foreach (String receivedFile in _interaction.ReceiveXmlMessages())
+                {
+                    if (Properties.Settings.Default.shopId == 0)
+                    {
+                        var mappingMessage = (ShopMapping)Helper.DeserializeXml(typeof(ShopMapping), receivedFile);
+
+                        if (mappingMessage != null)
+                        {
+                            Properties.Settings.Default.shopId = mappingMessage.Id;
+                            Properties.Settings.Default.Save();
+
+                            Application.Current.Dispatcher.Invoke(
+                                DispatcherPriority.Background, new Action(() => { InsertGood.IsEnabled = true; })
+                            );
+                        }
+                    }
+                    else
+                    {
+
+                    }
+                }
             });
 
             receiveThread.IsBackground = true;

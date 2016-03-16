@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -74,48 +75,53 @@ namespace ShopClient
             return isSend;
         }
 
-        //TODO IEnumerable , yield return
-        public void ReceiveXmlMessages()
+        public IEnumerable<String> ReceiveXmlMessages()
         {
-            try
+            while (true)
             {
-                while (true)
+                Console.WriteLine("Ожидание сообщения от сервера..");
+                TcpClient client = null;
+
+                try
                 {
-                    Console.WriteLine("Ожидание сообщения от сервера..");
-                    TcpClient client = _tcpListener.AcceptTcpClient();
+                    client = _tcpListener.AcceptTcpClient();
 
                     IPEndPoint ipEndPoint = (IPEndPoint)client.Client.RemoteEndPoint;
                     String remoteIp = ipEndPoint.Address.ToString();
                     Console.WriteLine("Прислано новое сообщение с IP: {0}", remoteIp);
-
-                    try
-                    {
-                        String receivedFileName = client.GetHashCode() + "-message.xml";
-
-                        using (NetworkStream clientStream = client.GetStream())
-                        using (StreamReader reader = new StreamReader(clientStream))
-                        using (StreamWriter writer = new StreamWriter(receivedFileName))
-                        {
-                            String line;
-
-                            while ((line = reader.ReadLine()) != null)
-                                writer.WriteLine(line);
-
-                            Console.WriteLine("Сообщение записано в файл {0}", receivedFileName);
-                        }
-
-                        //yield return fileName
-                    }
-                    catch (InvalidOperationException e)
-                    {
-                        Console.WriteLine(e.ToString());
-                    }
+                }
+                catch (SocketException e)
+                {
+                    Console.WriteLine(e.ToString());
                 }
 
-            }
-            catch (SocketException e)
-            {
-                Console.WriteLine(e.ToString());
+                if (client == null)
+                    break;
+
+                String receivedFileName = null;
+
+                try
+                {
+                    receivedFileName = client.GetHashCode() + "-message.xml";
+
+                    using (NetworkStream clientStream = client.GetStream())
+                    using (StreamReader reader = new StreamReader(clientStream))
+                    using (StreamWriter writer = new StreamWriter(receivedFileName))
+                    {
+                        String line;
+
+                        while ((line = reader.ReadLine()) != null)
+                            writer.WriteLine(line);
+
+                        Console.WriteLine("Сообщение записано в файл {0}", receivedFileName);
+                    }
+                }
+                catch (InvalidOperationException e)
+                {
+                    Console.WriteLine(e.ToString());
+                }
+
+                yield return receivedFileName;
             }
         }
     }

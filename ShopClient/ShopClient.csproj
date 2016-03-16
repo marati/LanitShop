@@ -87,6 +87,7 @@
     <Compile Include="Model\ShopEntity.cs" />
     <Compile Include="ServerInteraction.cs" />
     <Compile Include="Model\Shop.cs" />
+    <Compile Include="Server\ShopMapping.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
