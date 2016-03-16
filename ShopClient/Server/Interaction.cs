@@ -5,9 +5,9 @@ using System.Net;
 using System.Net.Sockets;
 using System.Xml.Serialization;
 
-namespace ShopClient
+namespace ShopClient.Server
 {
-    class ServerInteraction
+    class Interaction
     {
         IPAddress _ipAddress = Helper.GetIpAddress("wireless");
         int _serverPort;
@@ -15,14 +15,14 @@ namespace ShopClient
         TcpListener _tcpListener;
         TcpClient _tcpClient = new TcpClient();
 
-        public ServerInteraction(int port)
+        public Interaction(int port)
         {
             _tcpListener = new TcpListener(_ipAddress, 0);
             _tcpListener.Start();
             _serverPort = port;
         }
 
-        ~ServerInteraction()
+        ~Interaction()
         {
             using (_tcpClient) { };
 

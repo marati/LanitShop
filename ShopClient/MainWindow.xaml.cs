@@ -2,12 +2,12 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Text.RegularExpressions;
+using System.Windows.Threading;
 using System.Collections.Specialized;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 using ShopClient.Server;
-using System.Windows.Threading;
 
 namespace ShopClient
 {
@@ -25,7 +25,7 @@ namespace ShopClient
         Models _models;
         int _errorsCount = 0;
 
-        ServerInteraction _interaction = new ServerInteraction(Properties.Settings.Default.serverPort);
+        Interaction _interaction = new Interaction(Properties.Settings.Default.serverPort);
 
         public MainWindow()
         {
@@ -67,7 +67,7 @@ namespace ShopClient
                             Properties.Settings.Default.shopId = mappingMessage.Id;
                             Properties.Settings.Default.Save();
 
-                            Application.Current.Dispatcher.Invoke(
+                            InsertGood.Dispatcher.Invoke(
                                 DispatcherPriority.Background, new Action(() => { InsertGood.IsEnabled = true; })
                             );
                         }

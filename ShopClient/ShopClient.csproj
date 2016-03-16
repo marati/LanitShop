@@ -85,7 +85,7 @@
     <Compile Include="Model\GoodEntity.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="Model\ShopEntity.cs" />
-    <Compile Include="ServerInteraction.cs" />
+    <Compile Include="Server\Interaction.cs" />
     <Compile Include="Model\Shop.cs" />
     <Compile Include="Server\ShopMapping.cs" />
     <Page Include="MainWindow.xaml">
