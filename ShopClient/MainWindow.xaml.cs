@@ -41,6 +41,21 @@ namespace ShopClient
             _models.Good.Goods.CollectionChanged += Goods_CollectionChanged;
 
             ProcessingReceivedFiles();
+            RestoreShopInfo(Properties.Settings.Default.shopId);
+        }
+
+        void RestoreShopInfo(int shopId)
+        {
+            if (shopId != 0)
+            {
+                ShopInfo shopInfo = new ShopInfo { Id = shopId };
+
+                if (_interaction.SendMessage(shopInfo))
+                {
+                    StatusMessage.Text = "Запрос на получение информации о магазине отправлен, ожидание ответа..";
+                    InsertGood.IsEnabled = false;
+                }
+            }
         }
 
         private void Goods_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -110,7 +125,7 @@ namespace ShopClient
             else
                 sendResult = "Не удалось передать сообщение, повторите отправку";
 
-            MessageBox.Show(sendResult);
+            StatusMessage.Text = sendResult;
 
             e.Handled = true;
         }
