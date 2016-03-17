@@ -7,7 +7,7 @@
         xmlns:local="clr-namespace:ShopClient"
         xmlns:model="clr-namespace:ShopClient.Model"
         mc:Ignorable="d"
-        Title="MainWindow" Height="300" Width="915" MinWidth="915">
+        Title="Shop Client" Height="300" MinHeight="300" Width="915" MinWidth="915">
 
     <Window.Resources>
         <Style x:Name="MaskedTextBoxStyle" TargetType="{x:Type xctk:WatermarkTextBox}">
@@ -30,7 +30,7 @@
 
         <DockPanel DockPanel.Dock="Top" Grid.Row="0" HorizontalAlignment="Stretch">
             <xctk:WatermarkTextBox Watermark="Имя магазина"
-                                   Width="100"
+                                   MinWidth="100"
                                    Margin="5" Focusable="True"
                                    Validation.Error="Validation_Error">
                 <xctk:WatermarkTextBox.Text>
@@ -40,7 +40,7 @@
             </xctk:WatermarkTextBox>
 
             <xctk:WatermarkTextBox Watermark="Адрес"
-                                   Width="250"
+                                   MinWidth="250"
                                    Margin="5"
                                    Validation.Error="Validation_Error">
                 <xctk:WatermarkTextBox.Text>
@@ -52,7 +52,7 @@
             <xctk:MaskedTextBox Mask="0(000)000-00-00"
                                 FontSize="14"
                                 TextAlignment="Center"
-                                Width="120"
+                                MinWidth="120"
                                 Margin="5"
                                 Validation.Error="Validation_Error">
                 <xctk:MaskedTextBox.Text>
@@ -62,7 +62,7 @@
             </xctk:MaskedTextBox>
 
             <xctk:WatermarkTextBox Watermark="Email"
-                                   Width="250"
+                                   MinWidth="200"
                                    Margin="5"
                                    Validation.Error="Validation_Error">
                 <xctk:WatermarkTextBox.Text>
@@ -72,34 +72,47 @@
             </xctk:WatermarkTextBox>
 
             <Button Content="Отправить данные"
-                    Width="120"
+                    Width="auto"
                     Margin="5"
                     Command="New"/>
         </DockPanel>
 
-        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
-            <xctk:WatermarkTextBox Watermark="Имя товара" x:Name="GoodName"
-                                   Width="150"
-                                   Margin="5"/>
+        <Grid DockPanel.Dock="Bottom" x:Name="PopupGrid">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="auto"/>
+            </Grid.ColumnDefinitions>
 
-            <xctk:WatermarkTextBox Watermark="Количество" x:Name="Quantity"
-                                   Width="80"
-                                   Margin="5"
-                                   PreviewTextInput="QuantityValidation"/>
+            <Popup Grid.Column="0" Placement="Relative" VerticalOffset="10" HorizontalOffset="5"
+                   StaysOpen="False" AllowsTransparency="True" IsOpen="True">
+                <TextBlock x:Name="StatusMessage" FontSize="13" FontStyle="Italic"
+                           VerticalAlignment="Center" Margin="10,0,0,0">
+                    Ожидание создания/получения инфомации магазина
+                </TextBlock>
+            </Popup>
+            
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Stretch">
+                <xctk:WatermarkTextBox Watermark="Имя товара" x:Name="GoodName"
+                                       Margin="5" HorizontalAlignment="Right"/>
 
-            <Button x:Name="InsertGood" Content="Добавить позицию"
-                    Width="120"
-                    Margin="5"
-                    Command="{Binding Good.AddGood}"
-                    IsEnabled="False">
-                <Button.CommandParameter>
-                    <MultiBinding Converter="{StaticResource GoodConverter}">
-                        <Binding Path="Text" ElementName="GoodName"/>
-                        <Binding Path="Text" ElementName="Quantity"/>
-                    </MultiBinding>
-                </Button.CommandParameter>
-            </Button>
-        </StackPanel>
+                <xctk:WatermarkTextBox Watermark="Количество" x:Name="Quantity"
+                                       Margin="5" HorizontalAlignment="Right"
+                                       PreviewTextInput="QuantityValidation"/>
+
+                <Button x:Name="InsertGood" Content="Добавить позицию"
+                        MinWidth="120"
+                        Margin="5"
+                        Command="{Binding Good.AddGood}"
+                        IsEnabled="False" HorizontalAlignment="Right">
+                    <Button.CommandParameter>
+                        <MultiBinding Converter="{StaticResource GoodConverter}">
+                            <Binding Path="Text" ElementName="GoodName"/>
+                            <Binding Path="Text" ElementName="Quantity"/>
+                        </MultiBinding>
+                    </Button.CommandParameter>
+                </Button>
+            </StackPanel>
+        </Grid>
 
         <ListView x:Name="GoodsList"
                   ItemsSource="{Binding Good.Goods}"
@@ -114,7 +127,7 @@
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
-                    
+
                     <GridViewColumn Header="Количество">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
@@ -128,7 +141,7 @@
                 <ContextMenu>
                     <MenuItem Header="Удалить строку" Command="{Binding AddGood}"
                               CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItem}">
-                        
+
                     </MenuItem>
                 </ContextMenu>
             </ListView.ContextMenu>
