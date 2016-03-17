@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace ShopServer
+namespace ShopServer.Client
 {
-    public class ShopData
+    public class ShopEntity
     {
         public String Name { get; set; }
         public String Address { get; set; }

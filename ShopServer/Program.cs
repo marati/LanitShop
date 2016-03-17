@@ -17,7 +17,7 @@ namespace ShopServer
                     Environment.Exit(0);
                 }
 
-                new ClientInteraction(port).ReceiveMessages();
+                new Client.Interaction(port).ReceiveMessages();
             }
             else
             {

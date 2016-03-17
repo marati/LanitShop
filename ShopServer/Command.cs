@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Text;
-using System.Threading.Tasks;
+
+using ShopServer.Client;
 
 namespace ShopServer
 {
@@ -17,12 +17,21 @@ namespace ShopServer
         /// </summary>
         /// <param name="shop"></param>
         /// <returns>Id магазина в БД</returns>
-        public int InsertShop(ShopData shop)
+        public int InsertShop(ShopEntity shop)
         {
-            return 0;
+            return 1;
         }
 
-        public ShopMapping CreateResponse(int token, int id)
+        public ShopEntity GetShopById(int shopId)
+        {
+            return new ShopEntity()
+            {
+                Name = "test",
+                Address = "address test"
+            };
+        }
+
+        public ShopMapping ShopEntityResponse(int token, int id)
         {
             return new ShopMapping()
             {

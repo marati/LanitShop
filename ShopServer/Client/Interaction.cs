@@ -6,20 +6,20 @@ using System.Xml;
 using System.Xml.Serialization;
 using System.Collections.Generic;
 
-namespace ShopServer
+namespace ShopServer.Client
 {
-    class ClientInteraction
+    class Interaction
     {
         TcpListener _tcpListener;
         Command _command = new Command();
         Dictionary<int, IPEndPoint> _shopOfClient = new Dictionary<int, IPEndPoint>();
 
-        public ClientInteraction(int port)
+        public Interaction(int port)
         {
             _tcpListener = new TcpListener(Helper.GetIpAddress("wireless"), port);
         }
         
-        ~ClientInteraction()
+        ~Interaction()
         {
             try
             {
@@ -94,20 +94,40 @@ namespace ShopServer
         void ProcessShopEntity(XmlReader reader, IPAddress clientIp)
         {
             ShopEntity data = (ShopEntity)Helper.DeserializeXml(typeof(ShopEntity), reader);
-            int shopId = _command.InsertShop(data);
-            IPEndPoint endPoint = new IPEndPoint(clientIp, data.Port);
 
-            if (_shopOfClient.ContainsKey(shopId))
+            if (data != null)
             {
-                _shopOfClient[shopId] = endPoint;
+                int shopId = _command.InsertShop(data);
+                IPEndPoint endPoint = new IPEndPoint(clientIp, data.Port);
+
+                if (_shopOfClient.ContainsKey(shopId))
+                {
+                    _shopOfClient[shopId] = endPoint;
+                }
+                else
+                {
+                    _shopOfClient.Add(shopId, endPoint);
+
+                    object response = _command.ShopEntityResponse(data.Token, shopId);
+                    if (response != null)
+                        NotifyClient(shopId, endPoint, response);
+                }
             }
-            else
-            {
-                _shopOfClient.Add(shopId, endPoint);
+        }
 
-                object response = _command.CreateResponse(data.Token, shopId);
+        void ProcessShopInfo(XmlReader reader)
+        {
+            object info = Helper.DeserializeXml(typeof(ShopInfo), reader);
+
+            if (info != null)
+            {
+                ShopInfo data = (ShopInfo)info;
+                object response = _command.GetShopById(data.Id);
                 if (response != null)
-                    NotifyClient(shopId, endPoint, response);
+                {
+                    //TODO: получать данные для endPoint (адрес, порт) из БД
+                    IPEndPoint endPoint = new IPEndPoint();
+                }
             }
         }
 
@@ -123,6 +143,10 @@ namespace ShopServer
             {
                 case "ShopEntity":
                     ProcessShopEntity(reader, clientIp);
+                    break;
+
+                case "ShopInfo":
+                    ProcessShopInfo(reader);
                     break;
 
                 case "GoodData":
