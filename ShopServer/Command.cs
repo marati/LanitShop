@@ -1,15 +1,10 @@
 ﻿using System;
+using System.Data.Entity;
 
 using ShopServer.Client;
 
 namespace ShopServer
 {
-    public class ShopMapping
-    {
-        public int Token { get; set; }
-        public int Id { get; set; }
-    }
-
     class Command
     {
         /// <summary>
@@ -19,23 +14,31 @@ namespace ShopServer
         /// <returns>Id магазина в БД</returns>
         public int InsertShop(ShopEntity shop)
         {
-            return 1;
+            //TODO: сделать проверку на существующий элемент. В этом случае делать Update
+            using (ShopEntityContext db = new ShopEntityContext())
+            {
+                ShopEntity insertedShop = db.Shops.Add(shop);
+                db.SaveChanges();
+                return insertedShop.Id;
+            }
         }
 
         public ShopEntity GetShopById(int shopId)
         {
-            return new ShopEntity()
+            ShopEntity result = null;
+
+            using (ShopEntityContext db = new ShopEntityContext())
             {
-                Name = "test",
-                Address = "address test"
-            };
+                result = db.Shops.Find(shopId);
+            }
+
+            return result;
         }
 
-        public ShopMapping ShopEntityResponse(int token, int id)
+        public ShopInfo ShopEntityResponse(int id)
         {
-            return new ShopMapping()
+            return new ShopInfo()
             {
-                Token = token,
                 Id = id
             };
         }

@@ -97,7 +97,9 @@ namespace ShopServer.Client
 
             if (data != null)
             {
+                data.IpAddress = clientIp.ToString();
                 int shopId = _command.InsertShop(data);
+
                 IPEndPoint endPoint = new IPEndPoint(clientIp, data.Port);
 
                 if (_shopOfClient.ContainsKey(shopId))
@@ -108,7 +110,7 @@ namespace ShopServer.Client
                 {
                     _shopOfClient.Add(shopId, endPoint);
 
-                    object response = _command.ShopEntityResponse(data.Token, shopId);
+                    object response = _command.ShopEntityResponse(shopId);
                     if (response != null)
                         NotifyClient(shopId, endPoint, response);
                 }
@@ -125,8 +127,9 @@ namespace ShopServer.Client
                 object response = _command.GetShopById(data.Id);
                 if (response != null)
                 {
-                    //TODO: получать данные для endPoint (адрес, порт) из БД
-                    IPEndPoint endPoint = new IPEndPoint();
+                    ShopEntity shop = response as ShopEntity;
+                    IPEndPoint endPoint = new IPEndPoint(IPAddress.Parse(shop.IpAddress), shop.Port);
+                    NotifyClient(shop.Id, endPoint, response);
                 }
             }
         }
