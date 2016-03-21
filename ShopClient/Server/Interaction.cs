@@ -13,13 +13,12 @@ namespace ShopClient.Server
         int _serverPort;
 
         TcpListener _tcpListener;
-        TcpClient _tcpClient = new TcpClient();
+        TcpClient _tcpClient;
 
         public Interaction(int port)
         {
-            _tcpListener = new TcpListener(_ipAddress, 0);
-            _tcpListener.Start();
             _serverPort = port;
+            CreateListener(Properties.Settings.Default.clientPort);
         }
 
         ~Interaction()
@@ -37,21 +36,61 @@ namespace ShopClient.Server
 
         public int GetListenerPort()
         {
-            return ((IPEndPoint)_tcpListener.LocalEndpoint).Port;
+            int port = 0;
+
+            if (_tcpListener != null)
+                port = ((IPEndPoint)_tcpListener.LocalEndpoint).Port;
+
+            return port;
+        }
+
+        /// <summary>
+        /// save to local settings
+        /// </summary>
+        /// <param name="port"></param>
+        void SaveListenerPort(int listenerPort)
+        {
+            Properties.Settings.Default.clientPort = listenerPort;
+            Properties.Settings.Default.Save();
+        }
+
+        void CreateListener(int port)
+        {
+            try
+            {
+                //if port == 0, listener generate random unused port
+                _tcpListener = new TcpListener(_ipAddress, port);
+            }
+            catch (ArgumentOutOfRangeException e)
+            {
+                Console.WriteLine("Не удалось создать listener, причина:\n{0}", e.ToString());
+            }
+
+            if (_tcpListener == null)
+                Environment.Exit(0);
+
+            try
+            {
+                _tcpListener.Start();
+            }
+            catch (SocketException)
+            {
+            }
+
+            SaveListenerPort(((IPEndPoint)_tcpListener.LocalEndpoint).Port);
         }
 
         bool ConnectToServer()
         {
-            if (!_tcpClient.Connected)
+            _tcpClient = new TcpClient();
+            
+            try
             {
-                try
-                {
-                    _tcpClient.Connect(_ipAddress, _serverPort);
-                }
-                catch (SocketException e)
-                {
-                    Console.WriteLine(e.ToString());
-                }
+                _tcpClient.Connect(_ipAddress, _serverPort);
+            }
+            catch (SocketException e)
+            {
+                Console.WriteLine(e.ToString());
             }
 
             return _tcpClient.Connected;
@@ -104,6 +143,7 @@ namespace ShopClient.Server
                 {
                     receivedFileName = client.GetHashCode() + "-message.xml";
 
+                    //TODO: заменить на FileStream
                     using (NetworkStream clientStream = client.GetStream())
                     using (StreamReader reader = new StreamReader(clientStream))
                     using (StreamWriter writer = new StreamWriter(receivedFileName))
