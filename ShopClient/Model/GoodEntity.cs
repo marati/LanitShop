@@ -1,19 +1,14 @@
 ﻿using System;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 
 namespace ShopClient.Model
 {
+    /// <summary>
+    /// Является частью модели Good
+    /// Отсылается на сервер при добавлении товара; принимается от сервера, когда другой клиент добавит товар
+    /// </summary>
     [Serializable]
-    public class GoodEntity : INotifyPropertyChanged
+    public class GoodEntity : CustomPropertyChanged
     {
-        public event PropertyChangedEventHandler PropertyChanged = delegate { };
-
-        void RaisePropertyChanged([CallerMemberName] string propertyName = "")
-        {
-            PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-        }
-
         /// <summary>
         /// Mapping на базу данных
         /// </summary>

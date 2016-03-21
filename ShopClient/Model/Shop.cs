@@ -57,5 +57,24 @@ namespace ShopClient.Model
                 return result;
             }
         }
+
+        public bool IsEmpty()
+        {
+            return
+                String.IsNullOrEmpty(Name) &&
+                String.IsNullOrEmpty(Address) &&
+                String.IsNullOrEmpty(PhoneNumber) &&
+                String.IsNullOrEmpty(Email) &&
+                Port == 0;
+        }
+
+        public void SetData(ShopEntity entity)
+        {
+            Name = entity.Name;
+            Address = entity.Address;
+            PhoneNumber = entity.PhoneNumber;
+            Email = entity.Email;
+            Port = entity.Port;
+        }
     }
 }

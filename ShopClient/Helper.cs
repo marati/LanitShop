@@ -91,6 +91,8 @@ namespace ShopClient
                 {
                     Console.WriteLine("Не удалось десериализовать присланное сообщение с типом {0}", type.ToString());
                 }
+
+                reader.Close();
             }
 
             return result;

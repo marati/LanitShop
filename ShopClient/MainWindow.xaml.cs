@@ -6,8 +6,10 @@ using System.Windows.Threading;
 using System.Collections.Specialized;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.IO;
 
 using ShopClient.Server;
+using ShopClient.Model;
 
 namespace ShopClient
 {
@@ -44,6 +46,12 @@ namespace ShopClient
             RestoreShopInfo(Properties.Settings.Default.shopId);
         }
 
+        void SetStatusMessage(String message)
+        {
+            StatusPopup.IsOpen = true;
+            StatusMessage.Text = message;
+        }
+
         void RestoreShopInfo(int shopId)
         {
             if (shopId != 0)
@@ -52,7 +60,7 @@ namespace ShopClient
 
                 if (_interaction.SendMessage(shopInfo))
                 {
-                    StatusMessage.Text = "Запрос на получение информации о магазине отправлен, ожидание ответа..";
+                    SetStatusMessage("Запрос на получение информации о магазине отправлен, ожидание ответа..");
                     InsertGood.IsEnabled = false;
                 }
             }
@@ -75,9 +83,9 @@ namespace ShopClient
                 {
                     if (Properties.Settings.Default.shopId == 0)
                     {
-                        var mappingMessage = (ShopMapping)Helper.DeserializeXml(typeof(ShopMapping), receivedFile);
+                        var mappingMessage = (ShopInfo)Helper.DeserializeXml(typeof(ShopInfo), receivedFile);
 
-                        if (mappingMessage != null)
+                        if (mappingMessage.Id != 0)
                         {
                             Properties.Settings.Default.shopId = mappingMessage.Id;
                             Properties.Settings.Default.Save();
@@ -89,8 +97,35 @@ namespace ShopClient
                     }
                     else
                     {
+                        //сообщение о информации магазина (ShopEntity) от сервера
+                        if (_models.Shop.IsEmpty())
+                        {
+                            ShopEntity shop = (ShopEntity)Helper.DeserializeXml(typeof(ShopEntity), receivedFile);
 
+                            if (shop != null)
+                            {
+                                _models.Shop.SetData(shop);
+
+                                InsertGood.Dispatcher.Invoke(
+                                    DispatcherPriority.Background, new Action(() => {
+                                        InsertGood.IsEnabled = true;
+                                        SetStatusMessage("Данные о магазине успешно получены.");
+                                    })
+                                );
+                            }
+                        }
+                        else
+                        {
+
+                        }
                     }
+
+                    try
+                    {
+                        File.Delete(receivedFile);
+                    }
+                    catch (IOException)
+                    { }
                 }
             });
 
@@ -114,7 +149,6 @@ namespace ShopClient
                 Address = _models.Shop.Address,
                 PhoneNumber = _models.Shop.PhoneNumber,
                 Email = _models.Shop.Email,
-                Token = _models.Shop.GetHashCode(),
                 Port = _interaction.GetListenerPort()
             };
 
@@ -125,7 +159,7 @@ namespace ShopClient
             else
                 sendResult = "Не удалось передать сообщение, повторите отправку";
 
-            StatusMessage.Text = sendResult;
+            SetStatusMessage(sendResult);
 
             e.Handled = true;
         }

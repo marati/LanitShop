@@ -83,9 +83,9 @@
                 <ColumnDefinition Width="auto"/>
             </Grid.ColumnDefinitions>
 
-            <Popup Grid.Column="0" Placement="Relative" VerticalOffset="10" HorizontalOffset="5"
+            <Popup Grid.Column="0" x:Name="StatusPopup" Placement="Relative" VerticalOffset="10" HorizontalOffset="5"
                    StaysOpen="False" AllowsTransparency="True" IsOpen="True">
-                <TextBlock x:Name="StatusMessage" FontSize="13" FontStyle="Italic"
+                <TextBlock x:Name="StatusMessage" FontSize="13" FontStyle="Italic" TextWrapping="Wrap"
                            VerticalAlignment="Center" Margin="10,0,0,0">
                     Ожидание создания/получения инфомации магазина
                 </TextBlock>
