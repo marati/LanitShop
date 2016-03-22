@@ -13,7 +13,6 @@ namespace ShopClient.Server
         int _serverPort;
 
         TcpListener _tcpListener;
-        TcpClient _tcpClient;
 
         public Interaction(int port)
         {
@@ -23,11 +22,10 @@ namespace ShopClient.Server
 
         ~Interaction()
         {
-            using (_tcpClient) { };
-
             try
             {
-                _tcpListener.Stop();
+                if (_tcpListener != null)
+                    _tcpListener.Stop();
             }
             catch (SocketException)
             {
@@ -80,35 +78,46 @@ namespace ShopClient.Server
             SaveListenerPort(((IPEndPoint)_tcpListener.LocalEndpoint).Port);
         }
 
-        bool ConnectToServer()
+        TcpClient ClientInstance()
         {
-            _tcpClient = new TcpClient();
+            TcpClient client = new TcpClient();
             
             try
             {
-                _tcpClient.Connect(_ipAddress, _serverPort);
+                client.Connect(_ipAddress, _serverPort);
             }
             catch (SocketException e)
             {
                 Console.WriteLine(e.ToString());
             }
 
-            return _tcpClient.Connected;
+            return client;
         }
 
         public bool SendMessage(object message)
         {
             bool isSend = false;
 
-            if (ConnectToServer())
+            using (TcpClient client = ClientInstance())
             {
-                var xmlSerializer = new XmlSerializer(message.GetType());
+                if (client.Connected)
+                {
+                    var xmlSerializer = new XmlSerializer(message.GetType());
 
-                using (NetworkStream networkStream = _tcpClient.GetStream())
-                    if (networkStream.CanWrite)
-                        xmlSerializer.Serialize(networkStream, message);
+                    try
+                    {
+                        using (NetworkStream networkStream = client.GetStream())
+                            if (networkStream.CanWrite)
+                                xmlSerializer.Serialize(networkStream, message);
+                    }
+                    catch (ObjectDisposedException e)
+                    {
+                        Console.WriteLine("Невозможно получить доступ к сетевому потоку, возможно он был зыкрыт.");
+                        Console.WriteLine(e.ToString());
+                    }
 
-                isSend = true;
+                    isSend = true;
+                }
             }
 
             return isSend;
