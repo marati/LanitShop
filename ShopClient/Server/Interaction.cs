@@ -106,17 +106,28 @@ namespace ShopClient.Server
 
                     try
                     {
-                        using (NetworkStream networkStream = client.GetStream())
-                            if (networkStream.CanWrite)
-                                xmlSerializer.Serialize(networkStream, message);
+                        using (NetworkStream clientStream = client.GetStream())
+                        {
+                            if (clientStream.CanWrite)
+                            {
+                                try
+                                {
+                                    xmlSerializer.Serialize(clientStream, message);
+                                    isSend = true;
+                                }
+                                catch (InvalidOperationException e)
+                                {
+                                    Console.WriteLine("Не удалось сериализовать сообщение, отправка произведена не будет.");
+                                    Console.WriteLine(e);
+                                }
+                            }
+                        }
                     }
                     catch (ObjectDisposedException e)
                     {
                         Console.WriteLine("Невозможно получить доступ к сетевому потоку, возможно он был зыкрыт.");
                         Console.WriteLine(e.ToString());
                     }
-
-                    isSend = true;
                 }
             }
 

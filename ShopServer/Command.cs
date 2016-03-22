@@ -23,6 +23,15 @@ namespace ShopServer
             }
         }
 
+        public void UpdateShop(ShopEntity shop)
+        {
+            using (ShopEntityContext db = new ShopEntityContext())
+            {
+                db.Entry(shop).State = EntityState.Modified;
+                db.SaveChanges();
+            }
+        }
+
         public ShopEntity GetShopById(int shopId)
         {
             ShopEntity result = null;
